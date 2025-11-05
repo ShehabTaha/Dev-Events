@@ -5,7 +5,8 @@ import Image from "next/image";
 import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
 import { notFound } from "next/navigation";
 import EventCard from "./EventCard";
-const Base_Url = process.env.NEXT_PUBLIC_BASE_URL;
+import { cacheLife } from "next/cache";
+const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 const EventDetailItem = ({
   icon,
@@ -39,7 +40,7 @@ const EventAgenda = ({ agendaItems }: { agendaItems: string[] }) => {
 
 const EventTags = ({ tags }: { tags: string[] }) => {
   return (
-    <div className="flex fles-row gap-1.5">
+    <div className="flex fles-row gap-1.5 flex-wrap">
       {tags.map((tag) => (
         <p key={tag} className="pill">
           {tag}
@@ -49,42 +50,55 @@ const EventTags = ({ tags }: { tags: string[] }) => {
   );
 };
 
-const EventDetails = async ({ slug }: { slug: string }) => {
-  const bookings = 10;
-  const similarEvents: IEvent[] = await getSimilarEventsBySlug(slug);
-  const request = await fetch(`${Base_Url}/api/events/${slug}`);
-  const {
-    event: {
-      description,
-      image,
-      venue,
-      location,
-      date,
-      time,
-      mode,
-      overview,
-      audience,
-      agenda,
-      organizer,
-      tags,
-      id,
-    },
-  } = await request.json();
-  if (
-    !description ||
-    !image ||
-    !venue ||
-    !location ||
-    !date ||
-    !time ||
-    !mode ||
-    !overview ||
-    !audience ||
-    !agenda ||
-    !organizer ||
-    !tags
-  )
+const EventDetails = async ({ params }: { params: Promise<string> }) => {
+  "use cache";
+  cacheLife("hours");
+  const slug = await params;
+
+  let event;
+  try {
+    const request = await fetch(`${BASE_URL}/api/events/${slug}`, {
+      next: { revalidate: 60 },
+    });
+
+    if (!request.ok) {
+      if (request.status === 404) {
+        return notFound();
+      }
+      throw new Error(`Failed to fetch event: ${request.statusText}`);
+    }
+
+    const response = await request.json();
+    event = response.event;
+
+    if (!event) {
+      return notFound();
+    }
+  } catch (error) {
+    console.error("Error fetching event:", error);
     return notFound();
+  }
+
+  const {
+    description,
+    image,
+    overview,
+    date,
+    time,
+    location,
+    mode,
+    agenda,
+    audience,
+    tags,
+    organizer,
+    id,
+  } = event;
+
+  if (!description) return notFound();
+
+  const bookings = 10;
+
+  const similarEvents: IEvent[] = await getSimilarEventsBySlug(slug);
   return (
     <section>
       <div className="header">

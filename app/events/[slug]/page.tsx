@@ -1,25 +1,19 @@
-const Base_Url = process.env.NEXT_PUBLIC_BASE_URL;
-import { notFound } from "next/navigation";
-import Image from "next/image";
-import BookEvent from "@/components/BookEvent";
-import EventCard from "@/components/EventCard";
-import { IEvent } from "@/database/event.model";
-import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
-import { cacheLife } from "next/cache";
 import EventDetails from "@/components/EventDetails";
+import { Suspense } from "react";
 
 const EventDetailsPage = async ({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) => {
-  "use cache";
-  cacheLife("seconds");
-  const { slug } = await params;
+  const slug = params.then((p) => p.slug);
   return (
-    <div>
-      <EventDetails slug={slug} />
-    </div>
+    <main>
+      <Suspense fallback={<div>Loading...</div>}>
+        {" "}
+        <EventDetails params={slug} />
+      </Suspense>
+    </main>
   );
 };
 
