@@ -1,12 +1,8 @@
 import { Suspense } from "react";
 import EventDetails from "@/components/EventDetails";
 
-const EventDetailsPage = async ({
-  params,
-}: {
-  params: { slug: string };
-}) => {
-  const { slug } = params;
+const EventDetailsPage = async ({ params }: { params: { slug: string } }) => {
+  const slug = params.slug;
 
   return (
     <main>
