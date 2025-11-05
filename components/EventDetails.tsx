@@ -5,8 +5,6 @@ import Image from "next/image";
 import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
 import { notFound } from "next/navigation";
 import EventCard from "./EventCard";
-import { cacheLife } from "next/cache";
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 const EventDetailItem = ({
   icon,
@@ -50,14 +48,10 @@ const EventTags = ({ tags }: { tags: string[] }) => {
   );
 };
 
-const EventDetails = async ({ params }: { params: Promise<string> }) => {
-  "use cache";
-  cacheLife("hours");
-  const slug = await params;
-
+const EventDetails = async ({ slug }: { slug: string }) => {
   let event;
   try {
-    const request = await fetch(`${BASE_URL}/api/events/${slug}`, {
+    const request = await fetch(`/api/events/${slug}`, {
       next: { revalidate: 60 },
     });
 
