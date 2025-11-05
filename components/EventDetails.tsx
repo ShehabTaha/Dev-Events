@@ -5,7 +5,6 @@ import Image from "next/image";
 import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
 import { notFound } from "next/navigation";
 import EventCard from "./EventCard";
-const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
 const EventDetailItem = ({
   icon,
@@ -50,9 +49,13 @@ const EventTags = ({ tags }: { tags: string[] }) => {
 };
 
 const EventDetails = async ({ slug }: { slug: string }) => {
+  if (!slug) {
+    return notFound();
+  }
   let event;
   try {
-    const request = await fetch(`${BASE_URL}/api/events/${slug}`, {
+    const base = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "";
+    const request = await fetch(`${base}/api/events/${slug}`, {
       next: { revalidate: 60 },
     });
 
